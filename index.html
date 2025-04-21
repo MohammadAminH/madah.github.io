@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه آموزش مداحی</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.6/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap');
+        * {
+            font-family: 'Vazirmatn', sans-serif;
+        }
+        .rtl {
+            direction: rtl;
+        }
+        .ltr {
+            direction: ltr;
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f81c7 0%, #004080 100%);
+        }
+        .sidebar {
+            transition: all 0.3s;
+        }
+        .sidebar-collapsed {
+            width: 80px;
+        }
+        .sidebar-expanded {
+            width: 250px;
+        }
+        .content-expanded {
+            margin-right: 250px;
+        }
+        .content-collapsed {
+            margin-right: 80px;
+        }
+        .active-tab {
+            border-right: 4px solid #4f81c7;
+            background-color: #f0f7ff;
+        }
+        .score-cell {
+            width: 80px;
+        }
+        .logo-preview {
+            max-width: 150px;
+            max-height: 150px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 rtl">
+    <!-- Login Page -->
+    <div id="login-page" class="min-h-screen flex items-center justify-center gradient-bg">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <div class="text-center mb-8">
+                <img id="site-logo" src="https://via.placeholder.com/150x50?text=آموزش+مداحی" alt="آرم سایت" class="mx-auto h-16">
+                <h1 class="text-2xl font-bold text-gray-800 mt-4">سامانه آموزش مداحی</h1>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-gray-700 mb-2">نام کاربری</label>
+                    <input type="text" id="username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="password" class="block text-gray-700 mb-2">رمز عبور</label>
+                    <input type="password" id="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">ورود به سیستم</button>
+            </form>
+            <div id="login-error" class="mt-4 text-red-600 text-center hidden">نام کاربری یا رمز عبور اشتباه است</div>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="hidden min-h-screen">
+        <!-- Sidebar -->
+        <div id="admin-sidebar" class="sidebar sidebar-expanded fixed right-0 top-0 h-full bg-gray-800 text-white shadow-lg">
+            <div class="p-4 flex items-center justify-between border-b border-gray-700">
+                <div class="flex items-center">
+                    <img id="admin-logo" src="https://via.placeholder.com/150x50?text=آموزش+مداحی" alt="آرم سایت" class="h-10 mr-2">
+                    <span id="admin-title" class="text-lg font-semibold">پنل مدیریت</span>
+                </div>
+                <button id="toggle-sidebar" class="text-white focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="flex items-center mb-6">
+                    <div class="bg-blue-500 rounded-full w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div id="admin-user-info" class="mr-3">
+                        <div class="font-medium">مدیر سیستم</div>
+                        <div class="text-xs text-gray-400">سطح دسترسی: مدیر کل</div>
+                    </div>
+                </div>
+                <nav class="space-y-1">
+                    <a href="#" class="admin-tab flex items-center p-3 rounded-lg hover:bg-gray-700 active-tab" data-tab="users">
+                        <i class="fas fa-users ml-2"></i>
+                        <span>مدیریت کاربران</span>
+                    </a>
+                    <a href="#" class="admin-tab flex items-center p-3 rounded-lg hover:bg-gray-700" data-tab="courses">
+                        <i class="fas fa-book ml-2"></i>
+                        <span>مدیریت دروس</span>
+                    </a>
+                    <a href="#" class="admin-tab flex items-center p-3 rounded-lg hover:bg-gray-700" data-tab="scores">
+                        <i class="fas fa-chart-bar ml-2"></i>
+                        <span>نمرات دانشجویان</span>
+                    </a>
+                    <a href="#" class="admin-tab flex items-center p-3 rounded-lg hover:bg-gray-700" data-tab="terms">
+                        <i class="fas fa-calendar-alt ml-2"></i>
+                        <span>مدیریت ترم‌ها</span>
+                    </a>
+                    <a href="#" class="admin-tab flex items-center p-3 rounded-lg hover:bg-gray-700" data-tab="settings">
+                        <i class="fas fa-cog ml-2"></i>
+                        <span>تنظیمات سیستم</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="absolute bottom-0 w-full p-4 border-t border-gray-700">
+                <button id="admin-logout" class="flex items-center text-white hover:text-gray-300 w-full">
+                    <i class="fas fa-sign-out-alt ml-2"></i>
+                    <span>خروج از سیستم</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="admin-content" class="content-expanded min-h-screen">
+            <!-- Users Management -->
+            <div id="users-tab" class="admin-tab-content p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">مدیریت کاربران</h2>
+                    
+                    <!-- Add User Form -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">افزودن کاربر جدید</h3>
+                        <form id="add-user-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="new-username" class="block text-gray-700 mb-2">نام کاربری کاربر جدید</label>
+                                <input type="text" id="new-username" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="new-password" class="block text-gray-700 mb-2">رمز عبور</label>
+                                <input type="password" id="new-password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="new-firstname" class="block text-gray-700 mb-2">نام کاربر</label>
+                                <input type="text" id="new-firstname" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="new-lastname" class="block text-gray-700 mb-2">نام خانوادگی کاربر</label>
+                                <input type="text" id="new-lastname" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300">ثبت کاربر جدید</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Users List -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">لیست کاربران سیستم</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-2 px-4 border-b">نام کاربری</th>
+                                        <th class="py-2 px-4 border-b">نام و نام خانوادگی</th>
+                                        <th class="py-2 px-4 border-b">عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-list">
+                                    <!-- Users will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Courses Management -->
+            <div id="courses-tab" class="admin-tab-content hidden p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">مدیریت دروس</h2>
+                    
+                    <!-- Add Course Form -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">افزودن درس جدید</h3>
+                        <form id="add-course-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="course-name" class="block text-gray-700 mb-2">نام درس</label>
+                                <input type="text" id="course-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="course-code" class="block text-gray-700 mb-2">کد درس</label>
+                                <input type="text" id="course-code" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label for="course-students" class="block text-gray-700 mb-2">هنرجویان شرکت کننده</label>
+                                <select id="course-students" multiple class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-auto">
+                                    <!-- Students will be added here dynamically -->
+                                </select>
+                                <small class="text-gray-500">برای انتخاب چند هنرجو، کلید Ctrl را نگه دارید</small>
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300">ثبت درس جدید</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Courses List -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">لیست دروس سیستم</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-2 px-4 border-b">کد درس</th>
+                                        <th class="py-2 px-4 border-b">نام درس</th>
+                                        <th class="py-2 px-4 border-b">تعداد هنرجو</th>
+                                        <th class="py-2 px-4 border-b">عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="courses-list">
+                                    <!-- Courses will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scores Management -->
+            <div id="scores-tab" class="admin-tab-content hidden p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">مدیریت نمرات</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Student Selector -->
+                        <div class="md:col-span-1">
+                            <label for="score-student" class="block text-gray-700 mb-2">انتخاب هنرجو</label>
+                            <select id="score-student" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">-- انتخاب کنید --</option>
+                                <!-- Students will be added here dynamically -->
+                            </select>
+                        </div>
+                        
+                        <!-- Term Selector -->
+                        <div class="md:col-span-1">
+                            <label for="score-term" class="block text-gray-700 mb-2">انتخاب ترم</label>
+                            <select id="score-term" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">-- انتخاب کنید --</option>
+                                <!-- Terms will be added here dynamically -->
+                            </select>
+                        </div>
+                        
+                        <!-- Add Score Button -->
+                        <div class="md:col-span-1 flex items-end">
+                            <button id="add-score-btn" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300 w-full">افزودن نمره جدید</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Scores Table -->
+                    <div class="mt-8">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-2 px-4 border-b">نام درس</th>
+                                        <th class="py-2 px-4 border-b">کد درس</th>
+                                        <th class="py-2 px-4 border-b">نمره</th>
+                                        <th class="py-2 px-4 border-b">عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scores-list">
+                                    <!-- Scores will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Terms Management -->
+            <div id="terms-tab" class="admin-tab-content hidden p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">مدیریت ترم‌ها</h2>
+                    
+                    <!-- Add Term Form -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">افزودن ترم جدید</h3>
+                        <form id="add-term-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="term-name" class="block text-gray-700 mb-2">نام ترم</label>
+                                <input type="text" id="term-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="مثال: ترم اول">
+                            </div>
+                            <div>
+                                <label for="term-students" class="block text-gray-700 mb-2">هنرجویان ترم</label>
+                                <select id="term-students" multiple class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-auto">
+                                    <!-- Students will be added here dynamically -->
+                                </select>
+                                <small class="text-gray-500">برای انتخاب چند هنرجو، کلید Ctrl را نگه دارید</small>
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300">ثبت ترم جدید</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Terms List -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">لیست ترم‌های سیستم</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-2 px-4 border-b">نام ترم</th>
+                                        <th class="py-2 px-4 border-b">تعداد هنرجو</th>
+                                        <th class="py-2 px-4 border-b">عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="terms-list">
+                                    <!-- Terms will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div id="settings-tab" class="admin-tab-content hidden p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">تنظیمات سیستم</h2>
+                    
+                    <!-- Logo Upload -->
+                    <div class="mb-8">
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">آرم سایت</h3>
+                        <form id="logo-upload-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="logo-upload" class="block text-gray-700 mb-2">آپلود آرم جدید</label>
+                                <input type="file" id="logo-upload" accept="image/*" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div class="flex items-center justify-center">
+                                <img id="logo-preview" src="https://via.placeholder.com/150x50?text=آموزش+مداحی" alt="پیش نمایش آرم" class="logo-preview">
+                            </div>
+                            <div class="md:col-span-2">
+                                <button type="submit" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300">ذخیره آرم جدید</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Dashboard -->
+    <div id="student-dashboard" class="hidden min-h-screen">
+        <!-- Sidebar -->
+        <div id="student-sidebar" class="sidebar sidebar-expanded fixed right-0 top-0 h-full bg-gray-800 text-white shadow-lg">
+            <div class="p-4 flex items-center justify-between border-b border-gray-700">
+                <div class="flex items-center">
+                    <img id="student-logo" src="https://via.placeholder.com/150x50?text=آموزش+مداحی" alt="آرم سایت" class="h-10 mr-2">
+                    <span id="student-title" class="text-lg font-semibold">پنل هنرجو</span>
+                </div>
+                <button id="toggle-student-sidebar" class="text-white focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="flex items-center mb-6">
+                    <div class="bg-blue-500 rounded-full w-10 h-10 flex items-center justify-center">
+                        <i class="fas fa-user text-white"></i>
+                    </div>
+                    <div id="student-user-info" class="mr-3">
+                        <div class="font-medium" id="student-fullname">نام هنرجو</div>
+                        <div class="text-xs text-gray-400" id="student-term">ترم: -</div>
+                    </div>
+                </div>
+                <nav class="space-y-1">
+                    <a href="#" class="student-tab flex items-center p-3 rounded-lg hover:bg-gray-700 active-tab" data-tab="dashboard">
+                        <i class="fas fa-home ml-2"></i>
+                        <span>داشبورد</span>
+                    </a>
+                    <a href="#" class="student-tab flex items-center p-3 rounded-lg hover:bg-gray-700" data-tab="courses">
+                        <i class="fas fa-book ml-2"></i>
+                        <span>دروس من</span>
+                    </a>
+                    <a href="#" class="student-tab flex items-center p-3 rounded-lg hover:bg-gray-700" data-tab="scores">
+                        <i class="fas fa-chart-bar ml-2"></i>
+                        <span>کارنامه</span>
+                    </a>
+                </nav>
+            </div>
+            <div class="absolute bottom-0 w-full p-4 border-t border-gray-700">
+                <button id="student-logout" class="flex items-center text-white hover:text-gray-300 w-full">
+                    <i class="fas fa-sign-out-alt ml-2"></i>
+                    <span>خروج از سیستم</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="student-content" class="content-expanded min-h-screen">
+            <!-- Dashboard -->
+            <div id="student-dashboard-tab" class="student-tab-content p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">داشبورد هنرجو</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <!-- Student Info Card -->
+                        <div class="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                            <div class="flex items-center mb-3">
+                                <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                </div>
+                                <h3 class="font-semibold text-gray-800">اطلاعات شخصی</h3>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-sm"><span class="font-medium text-gray-700">نام کامل:</span> <span id="dashboard-fullname">-</span></p>
+                                <p class="text-sm"><span class="font-medium text-gray-700">نام کاربری:</span> <span id="dashboard-username">-</span></p>
+                                <p class="text-sm"><span class="font-medium text-gray-700">ترم فعلی:</span> <span id="dashboard-current-term">-</span></p>
+                            </div>
+                        </div>
+                        
+                        <!-- Courses Card -->
+                        <div class="bg-green-50 rounded-lg p-4 border border-green-100">
+                            <div class="flex items-center mb-3">
+                                <div class="bg-green-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-book text-green-600"></i>
+                                </div>
+                                <h3 class="font-semibold text-gray-800">دروس من</h3>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-sm"><span class="font-medium text-gray-700">تعداد دروس:</span> <span id="dashboard-course-count">0</span></p>
+                                <p class="text-sm"><span class="font-medium text-gray-700">میانگین نمرات:</span> <span id="dashboard-avg-score">-</span></p>
+                            </div>
+                        </div>
+                        
+                        <!-- Performance Card -->
+                        <div class="bg-purple-50 rounded-lg p-4 border border-purple-100">
+                            <div class="flex items-center mb-3">
+                                <div class="bg-purple-100 p-2 rounded-full mr-3">
+                                    <i class="fas fa-chart-line text-purple-600"></i>
+                                </div>
+                                <h3 class="font-semibold text-gray-800">عملکرد تحصیلی</h3>
+                            </div>
+                            <div class="space-y-2">
+                                <p class="text-sm"><span class="font-medium text-gray-700">بهترین نمره:</span> <span id="dashboard-best-score">-</span></p>
+                                <p class="text-sm"><span class="font-medium text-gray-700">ضعیف‌ترین نمره:</span> <span id="dashboard-worst-score">-</span></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Courses -->
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4 text-gray-700">آخرین دروس ثبت شده</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="py-2 px-4 border-b">نام درس</th>
+                                        <th class="py-2 px-4 border-b">کد درس</th>
+                                        <th class="py-2 px-4 border-b">نمره</th>
+                                        <th class="py-2 px-4 border-b">وضعیت</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-courses">
+                                    <!-- Recent courses will be added here dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Courses -->
+            <div id="student-courses-tab" class="student-tab-content hidden p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">دروس من</h2>
+                    
+                    <div class="mb-4">
+                        <label for="student-term-filter" class="block text-gray-700 mb-2">فیلتر بر اساس ترم</label>
+                        <select id="student-term-filter" class="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="all">همه ترم‌ها</option>
+                            <!-- Terms will be added here dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="py-2 px-4 border-b">نام درس</th>
+                                    <th class="py-2 px-4 border-b">کد درس</th>
+                                    <th class="py-2 px-4 border-b">ترم</th>
+                                    <th class="py-2 px-4 border-b">نمره</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-courses-list">
+                                <!-- Student courses will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transcript -->
+            <div id="student-scores-tab" class="student-tab-content hidden p-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-bold mb-6 text-gray-800 border-b pb-2">کارنامه تحصیلی</h2>
+                    
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <p class="text-gray-700"><span class="font-medium">نام هنرجو:</span> <span id="transcript-fullname">-</span></p>
+                            <p class="text-gray-700"><span class="font-medium">ترم فعلی:</span> <span id="transcript-term">-</span></p>
+                        </div>
+                        <button id="download-transcript" class="bg-blue-600 text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center">
+                            <i class="fas fa-download ml-2"></i>
+                            <span>دانلود PDF کارنامه</span>
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-200">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="py-2 px-4 border-b">ترم</th>
+                                    <th class="py-2 px-4 border-b">نام درس</th>
+                                    <th class="py-2 px-4 border-b">کد درس</th>
+                                    <th class="py-2 px-4 border-b">نمره</th>
+                                    <th class="py-2 px-4 border-b">وضعیت</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transcript-list">
+                                <!-- Transcript items will be added here dynamically -->
+                            </tbody>
+                            <tfoot class="bg-gray-50">
+                                <tr>
+                                    <td colspan="3" class="py-2 px-4 border-t font-medium">میانگین کل</td>
+                                    <td class="py-2 px-4 border-t font-medium" id="transcript-avg">-</td>
+                                    <td class="py-2 px-4 border-t"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Score Modal -->
+    <div id="add-score-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white rounded-lg p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold">افزودن نمره جدید</h3>
+                <button id="close-score-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="score-form" class="space-y-4">
+                <input type="hidden" id="score-student-id">
+                <input type="hidden" id="score-term-id">
+                <div>
+                    <label for="score-course" class="block text-gray-700 mb-2">درس</label>
+                    <select id="score-course" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <!-- Courses will be added here dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label for="score-value" class="block text-gray-700 mb-2">نمره</label>
+                    <input type="number" id="score-value" min="0" max="20" step="0.1" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancel-score" class="bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-300">انصراف</button>
+                    <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300">ذخیره نمره</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Database simulation
+        let database = {
+            users: [
+                { id: 1, username: 'admin', password: '1213123', firstname: 'مدیر', lastname: 'سیستم', isAdmin: true },
+                { id: 2, username: 'stu', password: '123', firstname: 'هنرجوی', lastname: 'نمونه', isAdmin: false }
+            ],
+            courses: [
+                { id: 1, name: 'مداحی مقدماتی', code: 'MAD101', students: [2] },
+                { id: 2, name: 'تحقیق در مداحی', code: 'MAD201', students: [2] }
+            ],
+            scores: [
+                { id: 1, studentId: 2, courseId: 1, termId: 1, value: 18.5 },
+                { id: 2, studentId: 2, courseId: 2, termId: 1, value: 16 }
+            ],
+            terms: [
+                { id: 1, name: 'ترم اول', students: [2] }
+            ],
+            logo: 'https://via.placeholder.com/150x50?text=آموزش+مداحی'
+        };
+
+        // Current user
+        let currentUser = null;
+
+        // DOM Ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Login Form
+            const loginForm = document.getElementById('login-form');
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                const user = database.users.find(u => u.username === username && u.password === password);
+                
+                if (user) {
+                    currentUser = user;
+                    document.getElementById('login-error').classList.add('hidden');
+                    
+                    if (user.isAdmin) {
+                        showAdminDashboard();
+                    } else {
+                        showStudentDashboard();
+                    }
+                } else {
+                    document.getElementById('login-error').classList.remove('hidden');
+                }
+            });
+            
+            // Admin Sidebar Toggle
+            const toggleSidebar = document.getElementById('toggle-sidebar');
+            const adminSidebar = document.getElementById('admin-sidebar');
+            const adminContent = document.getElementById('admin-content');
+            
+            toggleSidebar.addEventListener('click', function() {
+                adminSidebar.classList.toggle('sidebar-expanded');
+                adminSidebar.classList.toggle('sidebar-collapsed');
+                adminContent.classList.toggle('content-expanded');
+                adminContent.classList.toggle('content-collapsed');
+                
+                if (adminSidebar.classList.contains('sidebar-expanded')) {
+                    document.getElementById('admin-title').classList.remove('hidden');
+                    document.querySelectorAll('#admin-user-info div').forEach(el => el.classList.remove('hidden'));
+                } else {
+                    document.getElementById('admin-title').classList.add('hidden');
+                    document.querySelectorAll('#admin-user-info div').forEach(el => el.classList.add('hidden'));
+                }
+            });
+            
+            // Student Sidebar Toggle
+            const toggleStudentSidebar = document.getElementById('toggle-student-sidebar');
+            const studentSidebar = document.getElementById('student-sidebar');
+            const studentContent = document.getElementById('student-content');
+            
+            toggleStudentSidebar.addEventListener('click', function() {
+                studentSidebar.classList.toggle('sidebar-expanded');
+                studentSidebar.classList.toggle('sidebar-collapsed');
+                studentContent.classList.toggle('content-expanded');
+                studentContent.classList.toggle('content-collapsed');
+                
+                if (studentSidebar.classList.contains('sidebar-expanded')) {
+                    document.getElementById('student-title').classList.remove('hidden');
+                    document.querySelectorAll('#student-user-info div').forEach(el => el.classList.remove('hidden'));
+                } else {
+                    document.getElementById('student-title').classList.add('hidden');
+                    document.querySelectorAll('#student-user-info div').forEach(el => el.classList.add('hidden'));
+                }
+            });
+            
+            // Admin Tab Switching
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.admin-tab').forEach(t => {
+                        t.classList.remove('active-tab');
+                    });
+                    
+                    // Add active class to current tab
+                    this.classList.add('active-tab');
+                    
+                    // Hide all tab contents
+                    document.querySelectorAll('.admin-tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // Show current tab content
+                    document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+                    
+                    // Load data for the tab if needed
+                    if (tabId === 'users') {
+                        loadUsersList();
+                    } else if (tabId === 'courses') {
+                        loadCoursesList();
+                        loadStudentsForCourseForm();
+                    } else if (tabId === 'scores') {
+                        loadStudentsForScores();
+                        loadTermsForScores();
+                    } else if (tabId === 'terms') {
+                        loadTermsList();
+                        loadStudentsForTermForm();
+                    } else if (tabId === 'settings') {
+                        // Nothing special to load for settings
+                    }
+                });
+            });
+            
+            // Student Tab Switching
+            document.querySelectorAll('.student-tab').forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.student-tab').forEach(t => {
+                        t.classList.remove('active-tab');
+                    });
+                    
+                    // Add active class to current tab
+                    this.classList.add('active-tab');
+                    
+                    // Hide all tab contents
+                    document.querySelectorAll('.student-tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    
+                    // Show current tab content
+                    document.getElementById(`student-${tabId}-tab`).classList.remove('hidden');
+                    
+                    // Load data for the tab if needed
+                    if (tabId === 'dashboard') {
+                        loadStudentDashboard();
+                    } else if (tabId === 'courses') {
+                        loadStudentCourses();
+                    } else if (tabId === 'scores') {
+                        loadStudentTranscript();
+                    }
+                });
+            });
+            
+            // Add User Form
+            document.getElementById('add-user-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const username = document.getElementById('new-username').value;
+                const password = document.getElementById('new-password').value;
+                const firstname = document.getElementById('new-firstname').value;
+                const lastname = document.getElementById('new-lastname').value;
+                
+                if (!username || !password || !firstname || !lastname) {
+                    alert('لطفا تمام فیلدها را پر کنید');
+                    return;
+                }
+                
+                // Check if username exists
+                if (database.users.some(u => u.username === username)) {
+                    alert('این نام کاربری قبلا ثبت شده است');
+                    return;
+                }
+                
+                // Add new user
+                const newUser = {
+                    id: database.users.length > 0 ? Math.max(...database.users.map(u => u.id)) + 1 : 1,
+                    username,
+                    password,
+                    firstname,
+                    lastname,
+                    isAdmin: false
+                };
+                
+                database.users.push(newUser);
+                
+                // Clear form
+                this.reset();
+                
+                // Reload users list
+                loadUsersList();
+                
+                alert('کاربر جدید با موفقیت ثبت شد');
+            });
+            
+            // Add Course Form
+            document.getElementById('add-course-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const name = document.getElementById('course-name').value;
+                const code = document.getElementById('course-code').value;
+                const students = Array.from(document.getElementById('course-students').selectedOptions).map(opt => parseInt(opt.value));
+                
+                if (!name || !code || students.length === 0) {
+                    alert('لطفا تمام فیلدها را پر کنید');
+                    return;
+                }
+                
+                // Check if course code exists
+                if (database.courses.some(c => c.code === code)) {
+                    alert('این کد درس قبلا ثبت شده است');
+                    return;
+                }
+                
+                // Add new course
+                const newCourse = {
+                    id: database.courses.length > 0 ? Math.max(...database.courses.map(c => c.id)) + 1 : 1,
+                    name,
+                    code,
+                    students
+                };
+                
+                database.courses.push(newCourse);
+                
+                // Clear form
+                this.reset();
+                
+                // Reload courses list
+                loadCoursesList();
+                
+                alert('درس جدید با موفقیت ثبت شد');
+            });
+            
+            // Add Term Form
+            document.getElementById('add-term-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const name = document.getElementById('term-name').value;
+                const students = Array.from(document.getElementById('term-students').selectedOptions).map(opt => parseInt(opt.value));
+                
+                if (!name || students.length === 0) {
+                    alert('لطفا تمام فیلدها را پر کنید');
+                    return;
+                }
+                
+                // Add new term
+                const newTerm = {
+                    id: database.terms.length > 0 ? Math.max(...database.terms.map(t => t.id)) + 1 : 1,
+                    name,
+                    students
+                };
+                
+                database.terms.push(newTerm);
+                
+                // Clear form
+                this.reset();
+                
+                // Reload terms list
+                loadTermsList();
+                
+                alert('ترم جدید با موفقیت ثبت شد');
+            });
+            
+            // Logo Upload Form
+            document.getElementById('logo-upload-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fileInput = document.getElementById('logo-upload');
+                
+                if (fileInput.files.length === 0) {
+                    alert('لطفا یک فایل انتخاب کنید');
+                    return;
+                }
+                
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const logoUrl = e.target.result;
+                    database.logo = logoUrl;
+                    
+                    // Update all logos in the system
+                    document.getElementById('site-logo').src = logoUrl;
+                    document.getElementById('admin-logo').src = logoUrl;
+                    document.getElementById('student-logo').src = logoUrl;
+                    document.getElementById('logo-preview').src = logoUrl;
+                    
+                    alert('آرم سایت با موفقیت به روز شد');
+                };
+                
+                reader.readAsDataURL(file);
+            });
+            
+            // Preview logo when selected
+            document.getElementById('logo-upload').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('logo-preview').src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Score Management
+            document.getElementById('score-student').addEventListener('change', function() {
+                loadScoresForStudent();
+            });
+            
+            document.getElementById('score-term').addEventListener('change', function() {
+                loadScoresForStudent();
+            });
+            
+            document.getElementById('add-score-btn').addEventListener('click', function() {
+                const studentId = document.getElementById('score-student').value;
+                const termId = document.getElementById('score-term').value;
+                
+                if (!studentId || !termId) {
+                    alert('لطفا هنرجو و ترم را انتخاب کنید');
+                    return;
+                }
+                
+                document.getElementById('score-student-id').value = studentId;
+                document.getElementById('score-term-id').value = termId;
+                
+                // Load courses for this student and term
+                loadCoursesForScoreForm(studentId, termId);
+                
+                // Show modal
+                document.getElementById('add-score-modal').classList.remove('hidden');
+            });
+            
+            document.getElementById('close-score-modal').addEventListener('click', function() {
+                document.getElementById('add-score-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('cancel-score').addEventListener('click', function() {
+                document.getElementById('add-score-modal').classList.add('hidden');
+            });
+            
+            document.getElementById('score-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const studentId = parseInt(document.getElementById('score-student-id').value);
+                const courseId = parseInt(document.getElementById('score-course').value);
+                const termId = parseInt(document.getElementById('score-term-id').value);
+                const value = parseFloat(document.getElementById('score-value').value);
+                
+                if (!studentId || !courseId || !termId || isNaN(value) || value < 0 || value > 20) {
+                    alert('لطفا مقادیر معتبر وارد کنید');
+                    return;
+                }
+                
+                // Check if score already exists for this student, course and term
+                const existingScore = database.scores.find(s => 
+                    s.studentId === studentId && s.courseId === courseId && s.termId === termId
+                );
+                
+                if (existingScore) {
+                    // Update existing score
+                    existingScore.value = value;
+                } else {
+                    // Add new score
+                    const newScore = {
+                        id: database.scores.length > 0 ? Math.max(...database.scores.map(s => s.id)) + 1 : 1,
+                        studentId,
+                        courseId,
+                        termId,
+                        value
+                    };
+                    database.scores.push(newScore);
+                }
+                
+                // Close modal
+                document.getElementById('add-score-modal').classList.add('hidden');
+                
+                // Reload scores list
+                loadScoresForStudent();
+                
+                alert('نمره با موفقیت ثبت شد');
+            });
+            
+            // Student term filter
+            document.getElementById('student-term-filter').addEventListener('change', function() {
+                loadStudentCourses();
+            });
+            
+            // Download transcript
+            document.getElementById('download-transcript').addEventListener('click', function() {
+                generateTranscriptPDF();
+            });
+            
+            // Logout buttons
+            document.getElementById('admin-logout').addEventListener('click', function() {
+                logout();
+            });
+            
+            document.getElementById('student-logout').addEventListener('click', function() {
+                logout();
+            });
+        });
+        
+        // Show Admin Dashboard
+        function showAdminDashboard() {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.remove('hidden');
+            document.getElementById('student-dashboard').classList.add('hidden');
+            
+            // Load initial data
+            loadUsersList();
+            loadCoursesList();
+            loadStudentsForCourseForm();
+            loadTermsList();
+            loadStudentsForTermForm();
+            
+            // Set admin info
+            document.getElementById('admin-user-info').querySelector('div:first-child').textContent = currentUser.firstname + ' ' + currentUser.lastname;
+        }
+        
+        // Show Student Dashboard
+        function showStudentDashboard() {
+            document.getElementById('login-page').classList.add('hidden');
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('student-dashboard').classList.remove('hidden');
+            
+            // Set student info
+            const fullname = currentUser.firstname + ' ' + currentUser.lastname;
+            document.getElementById('student-fullname').textContent = fullname;
+            document.getElementById('dashboard-fullname').textContent = fullname;
+            document.getElementById('dashboard-username').textContent = currentUser.username;
+            document.getElementById('transcript-fullname').textContent = fullname;
+            
+            // Find student's term
+            const studentTerm = database.terms.find(t => t.students.includes(currentUser.id));
+            const termText = studentTerm ? studentTerm.name : 'ثبت نشده';
+            document.getElementById('student-term').textContent = 'ترم: ' + termText;
+            document.getElementById('dashboard-current-term').textContent = termText;
+            document.getElementById('transcript-term').textContent = termText;
+            
+            // Load initial data
+            loadStudentDashboard();
+            loadStudentCourses();
+            loadStudentTranscript();
+            loadTermsForStudentFilter();
+        }
+        
+        // Load Users List
+        function loadUsersList() {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '';
+            
+            // Filter out admin users
+            const studentUsers = database.users.filter(u => !u.isAdmin);
+            
+            studentUsers.forEach(user => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4">${user.username}</td>
+                    <td class="py-2 px-4">${user.firstname} ${user.lastname}</td>
+                    <td class="py-2 px-4">
+                        <button class="text-red-600 hover:text-red-800 delete-user" data-id="${user.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                usersList.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-user').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const userId = parseInt(this.getAttribute('data-id'));
+                    deleteUser(userId);
+                });
+            });
+        }
+        
+        // Delete User
+        function deleteUser(userId) {
+            if (!confirm('آیا از حذف این کاربر اطمینان دارید؟')) return;
+            
+            // Remove user
+            database.users = database.users.filter(u => u.id !== userId);
+            
+            // Remove user from courses
+            database.courses.forEach(course => {
+                course.students = course.students.filter(s => s !== userId);
+            });
+            
+            // Remove user from terms
+            database.terms.forEach(term => {
+                term.students = term.students.filter(s => s !== userId);
+            });
+            
+            // Remove user's scores
+            database.scores = database.scores.filter(s => s.studentId !== userId);
+            
+            // Reload lists
+            loadUsersList();
+            loadCoursesList();
+            loadTermsList();
+            
+            alert('کاربر با موفقیت حذف شد');
+        }
+        
+        // Load Courses List
+        function loadCoursesList() {
+            const coursesList = document.getElementById('courses-list');
+            coursesList.innerHTML = '';
+            
+            database.courses.forEach(course => {
+                const studentCount = course.students.length;
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4">${course.code}</td>
+                    <td class="py-2 px-4">${course.name}</td>
+                    <td class="py-2 px-4">${studentCount} هنرجو</td>
+                    <td class="py-2 px-4">
+                        <button class="text-red-600 hover:text-red-800 delete-course" data-id="${course.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                coursesList.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-course').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const courseId = parseInt(this.getAttribute('data-id'));
+                    deleteCourse(courseId);
+                });
+            });
+        }
+        
+        // Delete Course
+        function deleteCourse(courseId) {
+            if (!confirm('آیا از حذف این درس اطمینان دارید؟')) return;
+            
+            // Remove course
+            database.courses = database.courses.filter(c => c.id !== courseId);
+            
+            // Remove scores for this course
+            database.scores = database.scores.filter(s => s.courseId !== courseId);
+            
+            // Reload lists
+            loadCoursesList();
+            loadScoresForStudent();
+            
+            alert('درس با موفقیت حذف شد');
+        }
+        
+        // Load Students for Course Form
+        function loadStudentsForCourseForm() {
+            const studentsSelect = document.getElementById('course-students');
+            studentsSelect.innerHTML = '';
+            
+            // Filter out admin users
+            const studentUsers = database.users.filter(u => !u.isAdmin);
+            
+            studentUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.firstname} ${user.lastname} (${user.username})`;
+                studentsSelect.appendChild(option);
+            });
+        }
+        
+        // Load Terms List
+        function loadTermsList() {
+            const termsList = document.getElementById('terms-list');
+            termsList.innerHTML = '';
+            
+            database.terms.forEach(term => {
+                const studentCount = term.students.length;
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4">${term.name}</td>
+                    <td class="py-2 px-4">${studentCount} هنرجو</td>
+                    <td class="py-2 px-4">
+                        <button class="text-red-600 hover:text-red-800 delete-term" data-id="${term.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                termsList.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-term').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const termId = parseInt(this.getAttribute('data-id'));
+                    deleteTerm(termId);
+                });
+            });
+        }
+        
+        // Delete Term
+        function deleteTerm(termId) {
+            if (!confirm('آیا از حذف این ترم اطمینان دارید؟')) return;
+            
+            // Remove term
+            database.terms = database.terms.filter(t => t.id !== termId);
+            
+            // Remove scores for this term
+            database.scores = database.scores.filter(s => s.termId !== termId);
+            
+            // Reload lists
+            loadTermsList();
+            loadScoresForStudent();
+            
+            alert('ترم با موفقیت حذف شد');
+        }
+        
+        // Load Students for Term Form
+        function loadStudentsForTermForm() {
+            const studentsSelect = document.getElementById('term-students');
+            studentsSelect.innerHTML = '';
+            
+            // Filter out admin users
+            const studentUsers = database.users.filter(u => !u.isAdmin);
+            
+            studentUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.firstname} ${user.lastname} (${user.username})`;
+                studentsSelect.appendChild(option);
+            });
+        }
+        
+        // Load Students for Scores
+        function loadStudentsForScores() {
+            const studentSelect = document.getElementById('score-student');
+            studentSelect.innerHTML = '<option value="">-- انتخاب کنید --</option>';
+            
+            // Filter out admin users
+            const studentUsers = database.users.filter(u => !u.isAdmin);
+            
+            studentUsers.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.id;
+                option.textContent = `${user.firstname} ${user.lastname} (${user.username})`;
+                studentSelect.appendChild(option);
+            });
+        }
+        
+        // Load Terms for Scores
+        function loadTermsForScores() {
+            const termSelect = document.getElementById('score-term');
+            termSelect.innerHTML = '<option value="">-- انتخاب کنید --</option>';
+            
+            database.terms.forEach(term => {
+                const option = document.createElement('option');
+                option.value = term.id;
+                option.textContent = term.name;
+                termSelect.appendChild(option);
+            });
+        }
+        
+        // Load Scores for Selected Student and Term
+        function loadScoresForStudent() {
+            const studentId = document.getElementById('score-student').value;
+            const termId = document.getElementById('score-term').value;
+            const scoresList = document.getElementById('scores-list');
+            scoresList.innerHTML = '';
+            
+            if (!studentId || !termId) return;
+            
+            // Get student's scores for selected term
+            const studentScores = database.scores.filter(s => s.studentId == studentId && s.termId == termId);
+            
+            studentScores.forEach(score => {
+                const course = database.courses.find(c => c.id === score.courseId);
+                if (!course) return;
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4">${course.name}</td>
+                    <td class="py-2 px-4">${course.code}</td>
+                    <td class="py-2 px-4">${score.value}</td>
+                    <td class="py-2 px-4">
+                        <button class="text-red-600 hover:text-red-800 delete-score" data-id="${score.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                scoresList.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-score').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const scoreId = parseInt(this.getAttribute('data-id'));
+                    deleteScore(scoreId);
+                });
+            });
+        }
+        
+        // Delete Score
+        function deleteScore(scoreId) {
+            if (!confirm('آیا از حذف این نمره اطمینان دارید؟')) return;
+            
+            // Remove score
+            database.scores = database.scores.filter(s => s.id !== scoreId);
+            
+            // Reload scores list
+            loadScoresForStudent();
+            
+            alert('نمره با موفقیت حذف شد');
+        }
+        
+        // Load Courses for Score Form
+        function loadCoursesForScoreForm(studentId, termId) {
+            const courseSelect = document.getElementById('score-course');
+            courseSelect.innerHTML = '<option value="">-- انتخاب کنید --</option>';
+            
+            // Get courses that this student is enrolled in
+            const studentCourses = database.courses.filter(c => c.students.includes(parseInt(studentId)));
+            
+            // Filter out courses that already have a score for this student and term
+            const scoredCourses = database.scores
+                .filter(s => s.studentId == studentId && s.termId == termId)
+                .map(s => s.courseId);
+            
+            studentCourses.forEach(course => {
+                if (!scoredCourses.includes(course.id)) {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = `${course.name} (${course.code})`;
+                    courseSelect.appendChild(option);
+                }
+            });
+        }
+        
+        // Load Student Dashboard
+        function loadStudentDashboard() {
+            const studentId = currentUser.id;
+            const recentCourses = document.getElementById('recent-courses');
+            recentCourses.innerHTML = '';
+            
+            // Get student's scores (latest first)
+            const studentScores = database.scores
+                .filter(s => s.studentId === studentId)
+                .sort((a, b) => b.id - a.id)
+                .slice(0, 5); // Get only 5 most recent
+            
+            // Calculate stats
+            const allScores = database.scores.filter(s => s.studentId === studentId).map(s => s.value);
+            const avgScore = allScores.length > 0 ? (allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(2) : '-';
+            const bestScore = allScores.length > 0 ? Math.max(...allScores) : '-';
+            const worstScore = allScores.length > 0 ? Math.min(...allScores) : '-';
+            
+            // Update stats
+            document.getElementById('dashboard-course-count').textContent = allScores.length;
+            document.getElementById('dashboard-avg-score').textContent = avgScore;
+            document.getElementById('dashboard-best-score').textContent = bestScore;
+            document.getElementById('dashboard-worst-score').textContent = worstScore;
+            
+            // Add recent courses
+            studentScores.forEach(score => {
+                const course = database.courses.find(c => c.id === score.courseId);
+                const term = database.terms.find(t => t.id === score.termId);
+                if (!course || !term) return;
+                
+                const status = score.value >= 10 ? 'قبول' : 'مردود';
+                const statusClass = score.value >= 10 ? 'text-green-600' : 'text-red-600';
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4">${course.name}</td>
+                    <td class="py-2 px-4">${course.code}</td>
+                    <td class="py-2 px-4">${score.value}</td>
+                    <td class="py-2 px-4 ${statusClass}">${status}</td>
+                `;
+                recentCourses.appendChild(row);
+            });
+        }
+        
+        // Load Student Courses
+        function loadStudentCourses() {
+            const studentId = currentUser.id;
+            const termFilter = document.getElementById('student-term-filter').value;
+            const coursesList = document.getElementById('student-courses-list');
+            coursesList.innerHTML = '';
+            
+            // Get student's scores
+            let studentScores = database.scores.filter(s => s.studentId === studentId);
+            
+            // Filter by term if needed
+            if (termFilter !== 'all') {
+                studentScores = studentScores.filter(s => s.termId == termFilter);
+            }
+            
+            // Add courses
+            studentScores.forEach(score => {
+                const course = database.courses.find(c => c.id === score.courseId);
+                const term = database.terms.find(t => t.id === score.termId);
+                if (!course || !term) return;
+                
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-gray-50';
+                row.innerHTML = `
+                    <td class="py-2 px-4">${course.name}</td>
+                    <td class="py-2 px-4">${course.code}</td>
+                    <td class="py-2 px-4">${term.name}</td>
+                    <td class="py-2 px-4">${score.value}</td>
+                `;
+                coursesList.appendChild(row);
+            });
+        }
+        
+        // Load Terms for Student Filter
+        function loadTermsForStudentFilter() {
+            const termFilter = document.getElementById('student-term-filter');
+            termFilter.innerHTML = '<option value="all">همه ترم‌ها</option>';
+            
+            // Get terms that this student is enrolled in
+            const studentTerms = database.terms.filter(t => t.students.includes(currentUser.id));
+            
+            studentTerms.forEach(term => {
+                const option = document.createElement('option');
+                option.value = term.id;
+                option.textContent = term.name;
+                termFilter.appendChild(option);
+            });
+        }
+        
+        // Load Student Transcript
+        function loadStudentTranscript() {
+            const studentId = currentUser.id;
+            const transcriptList = document.getElementById('transcript-list');
+            transcriptList.innerHTML = '';
+            
+            // Get student's scores grouped by term
+            const scoresByTerm = {};
+            database.scores
+                .filter(s => s.studentId === studentId)
+                .forEach(score => {
+                    if (!scoresByTerm[score.termId]) {
+                        scoresByTerm[score.termId] = [];
+                    }
+                    scoresByTerm[score.termId].push(score);
+                });
+            
+            // Calculate overall average
+            const allScores = database.scores.filter(s => s.studentId === studentId).map(s => s.value);
+            const avgScore = allScores.length > 0 ? (allScores.reduce((a, b) => a + b, 0) / allScores.length).toFixed(2) : '-';
+            document.getElementById('transcript-avg').textContent = avgScore;
+            
+            // Add scores to transcript
+            for (const termId in scoresByTerm) {
+                const term = database.terms.find(t => t.id == termId);
+                if (!term) continue;
+                
+                // Add term row
+                const termRow = document.createElement('tr');
+                termRow.className = 'bg-gray-100 font-bold';
+                termRow.innerHTML = `
+                    <td colspan="5" class="py-2 px-4">${term.name}</td>
+                `;
+                transcriptList.appendChild(termRow);
+                
+                // Add courses for this term
+                scoresByTerm[termId].forEach(score => {
+                    const course = database.courses.find(c => c.id === score.courseId);
+                    if (!course) return;
+                    
+                    const status = score.value >= 10 ? 'قبول' : 'مردود';
+                    const statusClass = score.value >= 10 ? 'text-green-600' : 'text-red-600';
+                    
+                    const row = document.createElement('tr');
+                    row.className = 'border-b hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="py-2 px-4"></td>
+                        <td class="py-2 px-4">${course.name}</td>
+                        <td class="py-2 px-4">${course.code}</td>
+                        <td class="py-2 px-4">${score.value}</td>
+                        <td class="py-2 px-4 ${statusClass}">${status}</td>
+                    `;
+                    transcriptList.appendChild(row);
+                });
+            }
+        }
+        
+        // Generate Transcript PDF
+        function generateTranscriptPDF() {
+            const doc = new jsPDF();
+            
+            // Add logo
+            doc.addImage(database.logo, 'JPEG', 15, 10, 40, 20);
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.text('کارنامه تحصیلی', 105, 20, { align: 'center' });
+            
+            // Add student info
+            doc.setFontSize(12);
+            const fullname = currentUser.firstname + ' ' + currentUser.lastname;
+            const studentTerm = database.terms.find(t => t.students.includes(currentUser.id));
+            const termText = studentTerm ? studentTerm.name : 'ثبت نشده';
+            
+            doc.text(`نام هنرجو: ${fullname}`, 15, 40);
+            doc.text(`ترم فعلی: ${termText}`, 15, 50);
+            doc.text(`تاریخ صدور: ${new Date().toLocaleDateString('fa-IR')}`, 15, 60);
+            
+            // Add table
+            const headers = [['ترم', 'نام درس', 'کد درس', 'نمره', 'وضعیت']];
+            const rows = [];
+            
+            // Get student's scores
+            const studentScores = database.scores.filter(s => s.studentId === currentUser.id);
+            
+            studentScores.forEach(score => {
+                const course = database.courses.find(c => c.id === score.courseId);
+                const term = database.terms.find(t => t.id === score.termId);
+                if (!course || !term) return;
+                
+                const status = score.value >= 10 ? 'قبول' : 'مردود';
+                rows.push([term.name, course.name, course.code, score.value.toString(), status]);
+            });
+            
+            // Calculate average
+            const avgScore = studentScores.length > 0 ? 
+                (studentScores.reduce((sum, score) => sum + score.value, 0) / studentScores.length).toFixed(2) : 
+                '-';
+            
+            doc.autoTable({
+                startY: 70,
+                head: headers,
+                body: rows,
+                margin: { right: 15 },
+                styles: { font: 'Vazirmatn', halign: 'right' },
+                headStyles: { fillColor: [79, 129, 199] }
+            });
+            
+            // Add average
+            doc.setFontSize(12);
+            doc.text(`میانگین کل: ${avgScore}`, 15, doc.autoTable.previous.finalY + 20);
+            
+            // Save the PDF
+            doc.save(`کارنامه_${fullname}.pdf`);
+        }
+        
+        // Logout
+        function logout() {
+            currentUser = null;
+            document.getElementById('login-page').classList.remove('hidden');
+            document.getElementById('admin-dashboard').classList.add('hidden');
+            document.getElementById('student-dashboard').classList.add('hidden');
+            
+            // Clear login form
+            document.getElementById('login-form').reset();
+        }
+    </script>
+</body>
+</html>
